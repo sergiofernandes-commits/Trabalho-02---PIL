@@ -1,1 +1,52 @@
+# ==========================================
+# Gitignore para o Projeto control_pil (CCS + PLECS + Python)
+# ==========================================
+
+# Arquivos de compilação do Code Composer Studio (CCS) e perfis de Build
+[Dd]ebug/
+[Rr]elease/
 /CPU1_RAM/
+*.obj
+*.d
+*.out
+*.map
+*.hex
+*.bin
+*.lkf
+*.ilk
+*.pdb
+
+# Caches e arquivos locais do Eclipse / Workspace CCS
+.metadata/
+.config/
+.launches/
+RemoteSystemsTempFiles/
+.rts.cache/
+
+# Cache de indexação do compilador C++ (clangd)
+.clangd/
+.cache/
+
+# Arquivos locais gerados por assistentes de desenvolvimento
+.claude/
+
+# Arquivos temporários e de simulação do PLECS
+*.plecs.bak
+*.log
+*.mat
+plecs_sim/generated/
+
+# Arquivos e ambientes virtuais do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+env/
+venv/
+.pytest_cache/
+
+# Arquivos de sistema operacional
+Thumbs.db
+.DS_Store
+desktop.ini
