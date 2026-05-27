@@ -1,4 +1,4 @@
-# Projeto Control PIL - Conversor Buck (TMS320F28379D)
+# Projeto Control PIL - Conversor buck (TMS320F28379D)
 
 Este repositório contém uma implementação prática de **Processor-In-the-Loop (PIL)** para a validação e controle de um conversor estático Buck utilizando o microcontrolador C2000 TMS320F28379D. O ecossistema integra simulações numéricas no **PLECS**, projeto de malhas de controle em **Python**, e a execução do algoritmo em tempo real no hardware via comunicação serial (SCI).
 
