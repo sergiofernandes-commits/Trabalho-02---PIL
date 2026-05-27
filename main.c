@@ -21,17 +21,17 @@ float y[3]={0};
 float vo;
 
 //
-// Função Principal
+// Funcao Principal
 //
 void main(void)
 {
-    // Inicialização do dispositivo
+    // Inicializacao do dispositivo
     Device_init();
     Interrupt_initModule();
     Interrupt_initVectorTable();
     Board_init();
 
-    // Habilita interrupções globais e de tempo real
+    // Habilita interrupcoes globais e de tempo real
     EINT;
     ERTM;
 
