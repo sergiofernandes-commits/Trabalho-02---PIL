@@ -1,4 +1,4 @@
-# Comunicação Serial dO Plecs com micontrolador C2000 para execução do Controlador Proporcional Ressonante de um inversor monofásico simulado no PLECS - PIL 
+# Comunicação Serial do Plecs com micontrolador C2000 para execução do Controlador Proporcional Ressonante de um inversor monofásico simulado no PLECS - PIL 
 
 ## Descrição
 
