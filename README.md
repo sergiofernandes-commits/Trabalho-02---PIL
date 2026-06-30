@@ -1,35 +1,139 @@
-# Projeto Control PIL - Conversor buck (TMS320F28379D)
+# Comunicação Serial com CLA para Execução de Controlador Digital
 
-Este repositório contém uma implementação prática de **Processor-In-the-Loop (PIL)** para a validação e controle de um conversor estático Buck utilizando o microcontrolador C2000 TMS320F28379D. O ecossistema integra simulações numéricas no **PLECS**, projeto de malhas de controle em **Python**, e a execução do algoritmo em tempo real no hardware via comunicação serial (SCI).
+## Descrição
+
+Este projeto implementa a comunicação entre um computador e um microcontrolador **Texas Instruments C2000** por meio da interface **SCI (Serial Communication Interface)**. O objetivo é executar um algoritmo de controle no **Control Law Accelerator (CLA)**, recebendo uma amostra pela porta serial, processando-a no CLA e retornando o resultado ao computador.
+
+Essa arquitetura é utilizada em aplicações **Processor-in-the-Loop (PIL)**, permitindo validar algoritmos embarcados executando o controlador diretamente no hardware.
+
+---
+
+# Funcionamento Geral
+
+O sistema opera continuamente realizando as seguintes etapas:
+
+1. Recebe uma amostra de entrada pela interface SCI;
+2. Armazena o valor recebido na memória compartilhada entre CPU e CLA;
+3. Dispara a execução da tarefa do CLA;
+4. O CLA processa o algoritmo de controle;
+5. Ao finalizar o processamento, a interrupção do CLA é acionada;
+6. A CPU envia o resultado do controlador de volta pela interface SCI.
+
+Todo o processamento ocorre em tempo real.
+
+---
+
+# Estrutura do Código
+
+## main()
+
+A função principal é responsável por:
+
+* inicializar o dispositivo;
+* configurar os periféricos;
+* inicializar as interrupções;
+* habilitar as interrupções globais;
+* monitorar continuamente a recepção de dados pela SCI.
+
+Quando um valor do tipo **float** é recebido pela serial, ele é armazenado na variável compartilhada `vo`, e a execução do CLA é imediatamente iniciada.
+
+---
+
+## cla1Isr1()
+
+Esta interrupção é executada automaticamente após o término da tarefa do CLA.
+
+Suas funções são:
+
+* transmitir pela SCI o resultado calculado pelo controlador (`cla_output`);
+* limpar a interrupção do CLA para permitir novas execuções.
+
+---
+
+# Comunicação CPU × CLA
+
+As variáveis compartilhadas entre CPU e CLA são armazenadas em regiões específicas de memória utilizando a diretiva `#pragma DATA_SECTION`.
+
+## Entrada
+
+* `vo` → sinal recebido pela comunicação serial.
+
+## Saída
+
+* `cla_output` → saída calculada pelo controlador.
+
+## Estados internos
+
+Também são compartilhadas as variáveis de estado do controlador digital:
+
+* `x0`
+* `x1`
+* `x2`
+* `y0`
+* `y1`
+* `y2`
+
+Essas variáveis representam os estados internos do algoritmo implementado no CLA, permitindo a execução de controladores discretos baseados em equações de diferenças.
+
+---
+
+# Fluxo de Execução
+
+```text
+Computador
+     │
+     ▼
+ Comunicação SCI
+     │
+     ▼
+CPU (C2000)
+     │
+Recebe "vo"
+     │
+     ▼
+Dispara CLA
+     │
+     ▼
+Controlador Digital
+     │
+     ▼
+cla_output
+     │
+     ▼
+CPU
+     │
+     ▼
+SCI
+     │
+     ▼
+Computador
+```
+
+---
+
+# Comunicação Serial
+
+A troca de dados é realizada pelas funções:
+
+* `protocolReceiveData()` → recepção de dados pela SCI;
+* `protocolSendData()` → transmissão dos resultados pela SCI.
+
+Neste projeto são transmitidos valores do tipo **float (32 bits)**.
+
+---
+
+# Memória Compartilhada
+
+A comunicação entre CPU e CLA utiliza as regiões:
+
+* **CpuToCla1MsgRAM** → envio de dados da CPU para o CLA;
+* **Cla1ToCpuMsgRAM** → retorno dos resultados do CLA para a CPU.
+
+Esse mecanismo evita cópias adicionais de memória e reduz o tempo de comunicação entre os dois processadores.
+
+---
 
 
-## Estrutura do Projeto
+# Objetivo
 
-O repositório está organizado da seguinte forma:
-* **`main.c`**: Código principal da CPU1, responsável pela inicialização dos periféricos (SysCtl, GPIO, etc.), configuração do clock do sistema e gerenciamento do loop de controle em tempo real.
-* **`src/scicomm.c` e `src/scicomm.h`**: Módulos de baixo nível desenvolvidos com DriverLib para gerenciar a interface de comunicação serial (SCI/UART). Realizam o empacotamento, transmissão e recepção dos dados de telemetria entre o DSP e a simulação PIL.
-* **`plecs_sim/`**: Contém os arquivos de simulação do conversor buck:
-  * `vmc_buck_continuous.plecs`: Simulação em tempo contínuo do conversor buck em malha fechada.
-  * `vmc_buck.plecs`: Simulação SIL do conversor buck em malha fechada.
-  * `vmc_buck_pil.plecs`: Bloco de simulação estruturado para rodar no modo Processor-In-the-Loop, onde o conversor roda no PLECS e o controlador roda no microcontrolador.
-  * `vmc_buck_model_validation.plecs`:Validação do modelo do conversor buck.
-* **`python/projeto_controlador.py`**: Script em Python utilizado para o cálculo analítico dos ganhos do controlador digital (VMC - *Voltage Mode Control*) e sintonia das malhas com base nos parâmetros dinâmicos do conversor.
-
-
-## Arquitetura do Sistema (PIL)
-
-A metodologia PIL permite validar o código de controle no próprio hardware do microcontrolador antes da aplicação em uma bancada de potência física:
-1. O software **PLECS** calcula o estado das tensões e correntes do circuito do conversor buck a cada passo de simulação.
-2. Os dados de medição (ex: tensão de saída $V_{out}$) são empacotados e transmitidos via porta serial para o TMS320F28379D através das rotinas do `scicomm.c`.
-3. O microcontrolador recebe os dados por interrupção da SCI, executa o algoritmo de controle digital projetado no script Python, e calcula a nova razão cíclica ($D$).
-4. O valor de controle calculado é enviado de volta ao PLECS via serial, que o aplica ao interruptor estático (MOSFET) no próximo passo de integração.
-
-
-## Como Executar o Projeto
-
-1. Abra o Code Composer Studio (CCS) e importe o projeto contido na raiz deste repositório.
-2. Compile o código utilizando o perfil **Debug (RAM)** e carregue o binário `.out` no TMS320F28379D através do arquivo de configuração de alvo `targetConfigs/TMS320F28379D.ccxml`.
-3. Coloque o microcontrolador em modo de execução (*Resume/Run*).
-4. Abra o arquivo `plecs_sim/vmc_buck_pil.plecs` no PLECS.
-5. Certifique-se de que a porta COM configurada no bloco PIL do PLECS coincide com a porta virtual associada ao LaunchPad no seu sistema operacional.
-6. Inicie a simulação no PLECS para visualizar as curvas de resposta dinâmica do conversor Buck controladas em tempo real pelo chip.
+O objetivo deste projeto é validar a execução de algoritmos de controle diretamente no **Control Law Accelerator (CLA)**, utilizando a interface serial como meio de comunicação com um computador. Essa abordagem permite verificar o comportamento do controlador em hardware real, reduzindo a diferença entre a simulação e a implementação embarcada e servindo como etapa intermediária antes da validação em Hardware-in-the-Loop (HIL).

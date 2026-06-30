@@ -1,0 +1,18 @@
+#include "driverlib.h"
+#include "board.h"
+#include "shared_vars.h"
+
+__interrupt void Cla1Task1(void)
+{
+    float s;
+
+    s = 5e-7f * (vo - x2) + y1 + y1 - y2;
+
+    cla_output = 37.6991f * vo + 28424.5f * s;
+
+    x2 = x1;
+    x1 = vo;
+
+    y2 = y1;
+    y1 = s;
+}

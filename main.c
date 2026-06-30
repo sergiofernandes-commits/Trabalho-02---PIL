@@ -1,56 +1,48 @@
-//
-// Included Files
-//
 #include "driverlib.h"
 #include "device.h"
 #include "board.h"
 #include "scicomm.h"
 
-#define B0 0.001033
-#define B1 0.000767
-#define B2 -0.000266
-#define A1 -1.521886
-#define A2 0.521886
-
-#define REF 20
-#define UL 1
-#define LL 0
-
-float x[3]={0};
-float y[3]={0};
+#pragma DATA_SECTION(vo,"CpuToCla1MsgRAM")
 float vo;
+#pragma DATA_SECTION(cla_output, "Cla1ToCpuMsgRAM")
+float cla_output;
+#pragma DATA_SECTION(x0, "Cla1ToCpuMsgRAM")
+float x0;
+#pragma DATA_SECTION(x1, "Cla1ToCpuMsgRAM")
+float x1;
+#pragma DATA_SECTION(x2, "Cla1ToCpuMsgRAM")
+float x2;
+#pragma DATA_SECTION(y0, "Cla1ToCpuMsgRAM")
+float y0;
+#pragma DATA_SECTION(y1, "Cla1ToCpuMsgRAM")
+float y1;
+#pragma DATA_SECTION(y2, "Cla1ToCpuMsgRAM")
+float y2;
 
-//
-// Funcao Principal
-//
+
 void main(void)
 {
-    // Inicializacao do dispositivo
     Device_init();
     Interrupt_initModule();
     Interrupt_initVectorTable();
     Board_init();
 
-    // Habilita interrupcoes globais e de tempo real
     EINT;
     ERTM;
 
     while (1)
     {
-        if (SCI_getRxFIFOStatus(SCI0_BASE)>3)
+        if (SCI_getRxFIFOStatus(SCI0_BASE) > 3)
         {
-            protocolReceiveData(SCI0_BASE,&vo,sizeof(float));
-
-            x[2] = x[1]; x[1] = x[0]; x[0] = REF - vo;
-            y[2] = y[1]; y[1] = y[0];
-            y[0] = B0*x[0] + B1*x[1] + B2*x[2] - A1*y[1] - A2*y[2];
-
-            y[0] = (y[0] > UL) ? UL : y[0];
-            y[0] = (y[0] < LL) ? LL : y[0];
-
-            protocolSendData(SCI0_BASE, &y[0],sizeof(float));
-
+            protocolReceiveData(SCI0_BASE, &vo, sizeof(float));
+            CLA_forceTasks(myCLA0_BASE, CLA_TASKFLAG_1);
         }
-
     }
+}
+
+__interrupt void cla1Isr1(void)
+{
+    protocolSendData(SCI0_BASE, &cla_output, sizeof(float));
+    Interrupt_clearACKGroup(INT_myCLA01_INTERRUPT_ACK_GROUP);
 }
