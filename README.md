@@ -2,7 +2,7 @@
 
 ## Descrição
 
-O objetivo é simular um inversor monofásico no Plecs e realizar seu controle no micontrolador PLECS. O controle utilizado é de um controlador proporcional ressonante.  
+O objetivo é simular um inversor monofásico no Plecs e realizar seu controle no micontrolador C2000. O controle utilizado é de um controlador proporcional ressonante.  
 
 
 ---
