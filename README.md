@@ -1,10 +1,9 @@
-# Comunicação Serial com CLA para Execução de Controlador Proporcional Ressonante
+# Comunicação Serial dO Plecs com micontrolador C2000 para execução do Controlador Proporcional Ressonante de um inversor monofásico simulado no PLECS - PIL 
 
 ## Descrição
 
-Este projeto implementa a comunicação entre um computador e um microcontrolador **Texas Instruments C2000** por meio da interface **SCI (Serial Communication Interface)**. O objetivo é executar um algoritmo de controle no **Control Law Accelerator (CLA)** de um controlador Proporcional Ressonante que tem o objetivo de controlar um conversor ponte completa monofasico no software PLECS, recebendo uma amostra pela porta serial, processando-a no CLA e retornando o resultado ao computador.
+O objetivo é simular um inversor monofásico no Plecs e realizar seu controle no micontrolador PLECS. O controle utilizado é de um controlador proporcional ressonante.  
 
-Essa arquitetura é utilizada em aplicações **Processor-in-the-Loop (PIL)**, permitindo controlor um conversor monofasico no PLECS e o controlador PR no micontrolador da Texas.
 
 ---
 
@@ -12,13 +11,13 @@ Essa arquitetura é utilizada em aplicações **Processor-in-the-Loop (PIL)**, p
 
 O sistema opera continuamente realizando as seguintes etapas:
 
-1. O conversor monofasico é no software PLECS que gera a corrente injetada na rede eletrica;
-2. o Micontrolador recebe a corrente gerada do conversor simulado no PLECS na porta serial;
+1. O conversor monofásico é simulado no software PLECS que gera a corrente injetada na rede eletrica;
+2. o Micontrolador recebe a corrente gerada do conversor simulado no PLECS via porta serial;
 3. O micontrolador envia o sinal da CPU para o CLA;
 4. O CLA processa o algoritmo de controle;
 5. Ao finalizar o processamento, a interrupção do CLA é acionada;
-6. A CPU envia o resultado do controlador de volta pela interface SCI.
-7. O PLECS realiza o chaveamento do sinal recebido do micontrolador
+6. A CPU envia o resultado do controlador de volta pela interface SCI;
+7. O PLECS realiza o chaveamento do sinal recebido do micontrolador.
 
 
 ---
